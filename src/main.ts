@@ -24,10 +24,16 @@ const params = new URLSearchParams(location.search);
 const settings = loadSettings();
 
 // ?gl=0 forces the CSS fallback (what browsers without WebGL2 get).
-const ink = new InkTransition(canvas, toggle, { webgl: params.get('gl') !== '0' });
+let panel: DemoPanel;
+const ink = new InkTransition(canvas, toggle, {
+  webgl: params.get('gl') !== '0',
+  onToggle: () => {
+    panel?.refresh();
+  },
+});
 
 let showMarker = settings.showMarker;
-const panel = new DemoPanel(ink, {
+panel = new DemoPanel(ink, {
   showMarker,
   onMarkerChange: (show) => {
     showMarker = show;

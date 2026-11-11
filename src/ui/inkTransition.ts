@@ -37,13 +37,20 @@ const REPLAY_HOLD_MS = 400;
 
 type ActiveFrame = Omit<InkFrame, 'progress' | 'radius' | 'time' | 'cleanup'>;
 
+export interface InkTransitionOptions {
+  webgl?: boolean;
+  captureOnToggle?: boolean;
+  onToggle?: (theme: Theme) => void;
+}
+
 /**
  * Orchestrates the theme transition:
- *  1. keeps fresh snapshots of both themes on the GPU (pre-captured, re-captured on layout change)
- *  2. on toggle, covers the page with the "from" image, flips the live DOM underneath,
- *     spreads the ink, then fades the overlay away onto the already-flipped page
- *  3. if toggled mid-spread, freezes the frame on screen and spreads the next ink over it
- *  4. falls back to a CSS colour cross-fade or View Transitions API without WebGL2 or with reduced motion
+ *  1. On toggle (default on-demand mode): snapshots the current screen at that millisecond,
+ *     displays it on the WebGL canvas, switches the live DOM, and runs the ink shader
+ *     spreading over the live page.
+ *  2. Background pre-cache mode (when captureOnToggle: false): keeps snapshots of both themes on GPU.
+ *  3. Automatically invalidates textures on SPA navigation (popstate).
+ *  4. Falls back to CSS colour cross-fade without WebGL2 or with reduced motion.
  */
 export class InkTransition {
   private readonly renderer: InkRenderer | null;
@@ -57,12 +64,18 @@ export class InkTransition {
   private replayTimer = 0;
   private last: ClickRecord | null = null;
 
+  readonly captureOnToggle: boolean;
+  private readonly onToggle?: (theme: Theme) => void;
+  private lastCaptureMs = 0;
+
   private captureGen = 0;
   private capturing = false;
   private captureQueued = false;
   private resizeTimer = 0;
 
-  constructor(canvas: HTMLCanvasElement, toggleButton: HTMLButtonElement | null, opts: { webgl?: boolean } = {}) {
+  constructor(canvas: HTMLCanvasElement, toggleButton: HTMLButtonElement | null, opts: InkTransitionOptions = {}) {
+    this.captureOnToggle = opts.captureOnToggle ?? true;
+    this.onToggle = opts.onToggle;
     this.toggleButton = toggleButton;
     this.icon = toggleButton ? new ThemeIcon(toggleButton) : null;
     this.icon?.set(getTheme());
@@ -77,31 +90,43 @@ export class InkTransition {
     this.renderer.resize(renderScale());
     this.renderer.watchContext(
       () => this.cancel(),
-      () => this.scheduleCapture(0),
+      () => {
+        if (!this.captureOnToggle) this.scheduleCapture(0);
+      },
     );
 
-    // Kick off pre-capture immediately on mount so snapshots are ready on the very first click
-    this.scheduleCapture(0);
+    // Automatically listen to SPA URL changes (popstate)
+    window.addEventListener('popstate', () => this.invalidate());
 
-    let scrollDebounce = 0;
-    window.addEventListener('scroll', () => {
-      window.clearTimeout(scrollDebounce);
-      scrollDebounce = window.setTimeout(() => {
-        this.scheduleCapture(0);
-      }, 120);
-    }, { passive: true });
+    if (!this.captureOnToggle) {
+      // Kick off pre-capture immediately on mount so snapshots are ready on the very first click
+      this.scheduleCapture(0);
 
-    window.addEventListener('resize', () => {
-      this.renderer?.resize(renderScale());
-      if (this.frame) this.draw();
-      this.scheduleCapture(RESIZE_DEBOUNCE_MS);
-    });
-    // Catches document-height changes that aren't window resizes (late fonts, images).
-    new ResizeObserver(() => this.scheduleCapture(RESIZE_DEBOUNCE_MS)).observe(document.body);
-    // Snapshots are skipped under reduced motion; take them if the preference is lifted.
-    reducedMotion.addEventListener('change', () => this.scheduleCapture(0));
+      let scrollDebounce = 0;
+      window.addEventListener('scroll', () => {
+        window.clearTimeout(scrollDebounce);
+        scrollDebounce = window.setTimeout(() => {
+          this.scheduleCapture(0);
+        }, 120);
+      }, { passive: true });
 
-    void document.fonts.ready.then(() => this.scheduleCapture(50));
+      window.addEventListener('resize', () => {
+        this.renderer?.resize(renderScale());
+        if (this.frame) this.draw();
+        this.scheduleCapture(RESIZE_DEBOUNCE_MS);
+      });
+      // Catches document-height changes that aren't window resizes (late fonts, images).
+      new ResizeObserver(() => this.scheduleCapture(RESIZE_DEBOUNCE_MS)).observe(document.body);
+      // Snapshots are skipped under reduced motion; take them if the preference is lifted.
+      reducedMotion.addEventListener('change', () => this.scheduleCapture(0));
+
+      void document.fonts.ready.then(() => this.scheduleCapture(50));
+    } else {
+      window.addEventListener('resize', () => {
+        this.renderer?.resize(renderScale());
+        if (this.frame) this.draw();
+      });
+    }
   }
 
   get isWebGL(): boolean {
@@ -131,47 +156,152 @@ export class InkTransition {
 
   setCaptureMode(mode: CaptureMode): void {
     inkParams.captureMode = mode;
-    this.scheduleCapture(0);
+    if (!this.captureOnToggle) {
+      this.scheduleCapture(0);
+    }
   }
 
   getLastCaptureDuration(): number {
-    return this.renderer?.getLastCaptureMs() ?? 0;
+    return this.lastCaptureMs || (this.renderer?.getLastCaptureMs() ?? 0);
   }
 
   /**
    * Toggle the theme, spreading from `point` (viewport CSS px) or from the toggle button.
    * `seed` reproduces a previous spread exactly.
+   * Also accepts an options object or custom `onToggle` callback.
    */
-  toggle(point?: Point, seed?: InkFrame['seed']): void {
-    if (this.isAnimating) return;
+  async toggle(
+    pointOrOpts?: Point | { point?: Point; seed?: InkFrame['seed']; onToggle?: (theme: Theme) => void },
+    seed?: InkFrame['seed'],
+  ): Promise<void> {
+    if (this.isAnimating || this.capturing) return;
     window.clearTimeout(this.replayTimer);
-    const to = otherTheme(getTheme());
+
+    let point: Point | undefined;
+    let frameSeed: InkFrame['seed'] | undefined = seed;
+    let customOnToggle: ((theme: Theme) => void) | undefined;
+
+    if (pointOrOpts && ('x' in pointOrOpts || 'y' in pointOrOpts)) {
+      point = pointOrOpts as Point;
+    } else if (pointOrOpts && typeof pointOrOpts === 'object') {
+      point = pointOrOpts.point;
+      frameSeed = pointOrOpts.seed ?? seed;
+      customOnToggle = pointOrOpts.onToggle;
+    }
+
+    const from = getTheme();
+    const to = otherTheme(from);
     const renderer = this.renderer;
+
+    if (!renderer || renderer.isLost || reducedMotion.matches) {
+      this.cancel();
+      this.crossFade(to, customOnToggle);
+      return;
+    }
+
+    if (this.captureOnToggle) {
+      await this.toggleOnDemand(from, to, point, frameSeed, customOnToggle);
+      return;
+    }
+
     const scale = renderScale();
     const key = layoutKey(scale);
     const interrupting = this.frame !== null;
 
     const canAnimate =
-      renderer !== null &&
-      !renderer.isLost &&
-      !reducedMotion.matches &&
       renderer.hasValid(to, key) &&
-      (interrupting || renderer.hasValid(getTheme(), key));
+      (interrupting || renderer.hasValid(from, key));
 
-    if (!canAnimate || !renderer) {
-      if (renderer && !renderer.isLost && !reducedMotion.matches) {
-        void this.captureAndAnimate(to, point, seed);
-        return;
-      }
-      this.cancel();
-      this.crossFade(to);
+    if (!canAnimate) {
+      void this.captureAndAnimate(to, point, frameSeed, customOnToggle);
       return;
     }
 
-    this.startAnimation(to, point, seed);
+    this.startAnimation(to, point, frameSeed, customOnToggle);
   }
 
-  private async captureAndAnimate(to: Theme, point?: Point, seed?: InkFrame['seed']): Promise<void> {
+  private async toggleOnDemand(
+    from: Theme,
+    to: Theme,
+    point?: Point,
+    seed?: InkFrame['seed'],
+    customOnToggle?: (theme: Theme) => void,
+  ): Promise<void> {
+    const renderer = this.renderer;
+    if (!renderer || this.capturing || this.isAnimating) return;
+
+    this.capturing = true;
+    document.documentElement.classList.add('is-animating');
+
+    const scale = renderScale();
+    const center = point ?? this.toggleCenter();
+    const maxDist = farthestCorner(center);
+    const frameSeed = seed ?? randomSeed();
+    this.last = { point: center, seed: frameSeed, from };
+
+    try {
+      // 1. Snapshot the current screen right at that exact millisecond
+      const snap = await capturePage(from, scale, renderer.maxTextureSize);
+      if (renderer.isLost) {
+        this.capturing = false;
+        this.crossFade(to, customOnToggle);
+        return;
+      }
+      this.lastCaptureMs = snap.ms;
+      renderer.upload(snap);
+
+      // 2. Display the snapshot on the WebGL canvas
+      renderer.resize(scale);
+      this.frame = { from, to, center, maxDist, seed: frameSeed, live: true };
+      this.state.progress = 0;
+      this.state.time = 0;
+      this.draw();
+
+      gsap.set(renderer.canvas, { opacity: 1 });
+      renderer.canvas.classList.add('is-active');
+
+      // 3. Switch the live theme (dataset.theme = nextTheme and run consumer's toggle callback)
+      const chromeFrom = this.icon?.readChrome();
+      applyTheme(to, this.toggleButton);
+      this.onToggle?.(to);
+      customOnToggle?.(to);
+
+      const duration = inkParams.duration;
+      this.icon?.morphTo(to, {
+        duration,
+        ease: EASE,
+        timeScale: inkParams.timeScale,
+        chromeFrom,
+        chromeDelay: this.inkArrival(center, maxDist, this.toggleCenter()) * duration,
+      });
+
+      // 4. Run the ink shader spreading over the live page!
+      this.tween = gsap.to(this.state, {
+        progress: 1,
+        duration,
+        ease: EASE,
+        onUpdate: () => {
+          this.state.time = this.tween?.time() ?? 0;
+          this.draw();
+        },
+        onComplete: () => this.finish(),
+      });
+      this.tween.timeScale(inkParams.timeScale);
+    } catch (err) {
+      console.error('[ink] toggleOnDemand failed, falling back to crossfade', err);
+      this.hide();
+      this.crossFade(to, customOnToggle);
+    } finally {
+      this.capturing = false;
+    }
+  }
+
+  private async captureAndAnimate(
+    to: Theme,
+    point?: Point,
+    seed?: InkFrame['seed'],
+    customOnToggle?: (theme: Theme) => void,
+  ): Promise<void> {
     if (this.capturing) return;
     try {
       await this.captureAll();
@@ -179,16 +309,21 @@ export class InkTransition {
       const scale = renderScale();
       const key = layoutKey(scale);
       if (renderer && renderer.hasValid(to, key)) {
-        this.startAnimation(to, point, seed);
+        this.startAnimation(to, point, seed, customOnToggle);
       } else {
-        this.crossFade(to);
+        this.crossFade(to, customOnToggle);
       }
     } catch {
-      this.crossFade(to);
+      this.crossFade(to, customOnToggle);
     }
   }
 
-  private startAnimation(to: Theme, point?: Point, seed?: InkFrame['seed']): void {
+  private startAnimation(
+    to: Theme,
+    point?: Point,
+    seed?: InkFrame['seed'],
+    customOnToggle?: (theme: Theme) => void,
+  ): void {
     const renderer = this.renderer;
     if (!renderer) return;
     const scale = renderScale();
@@ -209,7 +344,7 @@ export class InkTransition {
     const maxDist = farthestCorner(center);
     const frameSeed = seed ?? randomSeed();
     this.last = { point: center, seed: frameSeed, from: otherTheme(to) };
-    this.frame = { from, to, center, maxDist, seed: frameSeed };
+    this.frame = { from, to, center, maxDist, seed: frameSeed, live: false };
     this.state.progress = 0;
     this.state.time = 0;
 
@@ -221,6 +356,8 @@ export class InkTransition {
     gsap.set(renderer.canvas, { opacity: 1 });
     renderer.canvas.classList.add('is-active');
     applyTheme(to, this.toggleButton);
+    this.onToggle?.(to);
+    customOnToggle?.(to);
 
     const duration = inkParams.duration;
     this.icon?.morphTo(to, {
@@ -304,11 +441,11 @@ export class InkTransition {
     this.frame = null;
     this.renderer?.canvas.classList.remove('is-active');
     document.documentElement.classList.remove('is-animating');
-    if (this.captureQueued) this.scheduleCapture(0);
+    if (!this.captureOnToggle && this.captureQueued) this.scheduleCapture(0);
   }
 
   private cancel(): void {
-    if (!this.frame) return;
+    if (!this.frame && !this.capturing) return;
     this.tween?.kill();
     this.fade?.kill();
     this.tween = null;
@@ -317,7 +454,7 @@ export class InkTransition {
   }
 
   /** Plain CSS colour transition fallback without jumping or flashing. */
-  private crossFade(to: Theme): void {
+  private crossFade(to: Theme, customOnToggle?: (theme: Theme) => void): void {
     const motion = !reducedMotion.matches;
     const root = document.documentElement;
 
@@ -325,6 +462,8 @@ export class InkTransition {
     root.classList.add('is-animating');
     root.style.setProperty('--theme-fade', `${CSS_FADE_S}s`);
     applyTheme(to, this.toggleButton);
+    this.onToggle?.(to);
+    customOnToggle?.(to);
 
     if (motion) {
       this.icon?.morphTo(to, { duration: CSS_FADE_S * 1.6, ease: 'power2.inOut', timeScale: 1 });
@@ -337,7 +476,7 @@ export class InkTransition {
       root.classList.remove('theme-fade');
       root.classList.remove('is-animating');
       this.cssFadeTimer = 0;
-      if (this.captureQueued) this.scheduleCapture(0);
+      if (!this.captureOnToggle && this.captureQueued) this.scheduleCapture(0);
     }, CSS_FADE_S * 1000 + 50);
   }
 
@@ -363,10 +502,13 @@ export class InkTransition {
 
   // ---------- Capture scheduling ----------
 
-  /** Invalidate cached snapshots and re-capture them in the background. */
+  /** Invalidate cached snapshots and re-capture them in the background (if pre-caching is enabled). */
   public invalidate(delay: number = 0): void {
+    this.renderer?.clearTextures();
     this.forceCapture = true;
-    this.scheduleCapture(delay);
+    if (!this.captureOnToggle) {
+      this.scheduleCapture(delay);
+    }
   }
 
   public scheduleCapture(delay: number = 0): void {

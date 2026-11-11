@@ -48,6 +48,8 @@ export interface InkFrame {
   time: number;
   /** Per-click randomness. */
   seed: { x: number; y: number; angle: number };
+  /** Whether the ink spreads over the live DOM (revealing it) or between snapshots. */
+  live?: boolean;
 }
 
 interface Sampler {
@@ -81,11 +83,11 @@ export class InkRenderer {
   /** Returns null when WebGL2 is unavailable. */
   static create(canvas: HTMLCanvasElement): InkRenderer | null {
     const gl = canvas.getContext('webgl2', {
-      alpha: false, // opaque: CSS opacity fades it straight onto the live DOM
+      alpha: true, // transparent: ink cutout reveals the live DOM underneath
       antialias: false,
       depth: false,
       stencil: false,
-      premultipliedAlpha: false,
+      premultipliedAlpha: true,
       preserveDrawingBuffer: false,
       powerPreference: 'high-performance',
     });
@@ -184,6 +186,15 @@ export class InkRenderer {
     entry.scrollX = snapshot.scrollX;
     entry.scrollY = snapshot.scrollY;
     entry.captureMs = snapshot.ms;
+  }
+
+  /** Clears and deletes all cached textures. */
+  clearTextures(): void {
+    if (this.lost) return;
+    for (const t of this.textures.values()) {
+      if (t.texture) this.gl.deleteTexture(t.texture);
+    }
+    this.textures.clear();
   }
 
   /** True when a snapshot for `theme` exists and is valid for the current viewport. */
@@ -287,7 +298,7 @@ export class InkRenderer {
 
   private render(frame: InkFrame): boolean {
     const from = this.sampler(frame.from);
-    const to = this.sampler(frame.to);
+    const to = this.sampler(frame.to) || from;
     if (!from || !to) return false;
 
     const gl = this.gl;
@@ -307,6 +318,7 @@ export class InkRenderer {
     gl.uniform1i(uniform('uFrom'), 0);
     gl.uniform1i(uniform('uTo'), 1);
     gl.uniform1i(uniform('uNoise'), 2);
+    gl.uniform1f(uniform('uLive'), frame.live ? 1.0 : 0.0);
     gl.uniform2f(uniform('uFromSize'), from.width, from.height);
     gl.uniform2f(uniform('uToSize'), to.width, to.height);
     gl.uniform4f(uniform('uFromMap'), from.ratio, from.offsetX, from.offsetY, from.flipY ? 1 : 0);

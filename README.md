@@ -22,9 +22,14 @@ A high-performance organic theme transition engine that replaces abrupt cuts and
   - **Smoke**: Turbulent atmospheric vapor with curling wisps and high drift velocity.
   - **Ember**: Hot burning paper frontier with vivid edge rims and rapid contour evolution.
   - **Ripple**: Cohesive circular fluid wave with minimal tendril dispersion.
-- **Smart Viewport Capture**:
-  - Captures only the active viewport rather than the entire document height, cutting snapshot overhead down to **~30-45ms** while eliminating GPU memory pressure on long pages.
+- **Smart On-Demand Viewport Capture (`captureOnToggle: true`)**:
+  - Snapshots the current screen right at the millisecond `toggle()` is clicked (~30-45ms in viewport mode), switches the live DOM theme, and spreads the ink shader with dynamic alpha transparency directly over the live page.
+  - Completely eliminates stale snapshots, background CPU polling, and pre-caching latency.
   - Real-time switcher between `Viewport` and `Full` capture strategies.
+- **Seamless Framework & Class Synchronization**:
+  - Synchronizes `data-theme="dark|light"`, `.dark-theme` / `.light-theme`, and `.dark` / `.light` (Tailwind / Radix) in both live DOM and `onclone`.
+  - First-class `onToggle: (theme) => void` hook for instantaneous React, Next.js, and Vue state synchronizations.
+  - Automatically listens to browser `popstate` events to invalidate cached textures during SPA client-side route changes.
 - **View Transitions API & Graceful Fallbacks**:
   - Automatically leverages native `document.startViewTransition` when available and motion is enabled.
   - Full respect for `prefers-reduced-motion` and automatic recovery from WebGL context loss.
@@ -54,7 +59,9 @@ import { createInkTransition } from '@pramuditha/theme.changer';
 const ink = createInkTransition({
   toggleButton: document.querySelector('#theme-toggle'),
   preset: 'ember', // 'ink' | 'watercolor' | 'smoke' | 'ember' | 'ripple'
-  captureMode: 'viewport', // 'viewport' (fast) | 'full'
+  captureMode: 'viewport', // 'viewport' (fast, default) | 'full'
+  captureOnToggle: true, // snapshots on demand at toggle click (default: true)
+  onToggle: (theme) => console.log('Theme changed to:', theme),
 });
 
 // Or trigger programmatically from any click coordinates
@@ -66,10 +73,11 @@ button.addEventListener('click', (e) => {
 ### React / Next.js Hook Integration
 
 ```tsx
-import { useEffect, useRef } from 'react';
-import { createInkTransition, type InkTransition } from 'theme.changer';
+import { useEffect, useRef, useState } from 'react';
+import { createInkTransition, type InkTransition, type Theme } from '@pramuditha/theme.changer';
 
 export function useThemeTransition() {
+  const [theme, setTheme] = useState<Theme>('dark');
   const inkRef = useRef<InkTransition | null>(null);
 
   useEffect(() => {
@@ -77,6 +85,8 @@ export function useThemeTransition() {
       toggleButton: document.querySelector('#theme-toggle') as HTMLButtonElement,
       preset: 'ink',
       captureMode: 'viewport',
+      captureOnToggle: true,
+      onToggle: (nextTheme) => setTheme(nextTheme),
     });
   }, []);
 

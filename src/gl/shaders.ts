@@ -53,6 +53,7 @@ uniform float uNoiseScale;  // noise frequency multiplier
 uniform float uSoftness;    // frontier half-width, CSS px
 uniform float uDrift;       // time evolution speed
 uniform vec3 uRimColor;     // pigment colour pooled at the frontier
+uniform float uLive;        // 1.0 = live page cutout, 0.0 = snapshot blend
 
 out vec4 outColor;
 
@@ -125,7 +126,11 @@ void main() {
   float inner = R * (1.0 - A_SUM) + cleanup - FIBRE_PX - THIN_MAX_PX - uSoftness * 2.0;
   float outer = R * (1.0 + A_SUM) * (1.0 + TENDRIL_REACH * uTendril) + cleanup + FIBRE_PX + SPECK_PX + uSoftness * 2.0;
   if (d < inner) {
-    outColor = vec4(sampleDoc(uTo, uToSize, uToMap, devPx), 1.0);
+    if (uLive > 0.5) {
+      outColor = vec4(0.0);
+    } else {
+      outColor = vec4(sampleDoc(uTo, uToSize, uToMap, devPx), 1.0);
+    }
     return;
   }
   if (d > outer) {
@@ -203,14 +208,22 @@ void main() {
   }
 
   vec3 from = sampleDoc(uFrom, uFromSize, uFromMap, devPx);
-  vec3 to = sampleDoc(uTo, uToSize, uToMap, devPx);
-  vec3 col = mix(from, to, cov);
 
   // Pigment rim pooled at the frontier (darker for ink, brighter for bleach).
   float rimX = (f + soft * 1.1) / (soft * 1.4 + 1.2);
   float rim = exp(-rimX * rimX) * inked;
-  col = mix(col, uRimColor, rim * 0.45);
 
-  outColor = vec4(col, 1.0);
+  if (uLive > 0.5) {
+    float a = clamp(1.0 - cov, 0.0, 1.0);
+    float rimFactor = rim * 0.45;
+    float alpha = clamp(a + rimFactor, 0.0, 1.0);
+    vec3 col = from * a + uRimColor * rimFactor;
+    outColor = vec4(col, alpha);
+  } else {
+    vec3 to = sampleDoc(uTo, uToSize, uToMap, devPx);
+    vec3 col = mix(from, to, cov);
+    col = mix(col, uRimColor, rim * 0.45);
+    outColor = vec4(col, 1.0);
+  }
 }
 `;

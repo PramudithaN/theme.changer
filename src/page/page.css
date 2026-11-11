@@ -475,8 +475,6 @@ ul[role='list'] {
 }
 
 .shader-bar {
-  position: relative;
-  z-index: 1001;
   display: flex;
   gap: 4px;
   padding: 8px 10px;
@@ -533,8 +531,6 @@ ul[role='list'] {
 }
 
 .stage-telemetry {
-  position: relative;
-  z-index: 1001;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -574,7 +570,7 @@ ul[role='list'] {
   pointer-events: none;
   opacity: 0;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-  z-index: 1001;
+  z-index: 2;
 }
 
 .stage-reticle::after {
@@ -611,8 +607,6 @@ ul[role='list'] {
 }
 
 .stage-specs {
-  position: relative;
-  z-index: 1001;
   display: flex;
   flex-wrap: wrap;
   gap: 24px 40px;
@@ -715,8 +709,6 @@ ul[role='list'] {
 }
 
 .cli-tabs {
-  position: relative;
-  z-index: 1001;
   display: flex;
   gap: 2px;
 }
@@ -801,8 +793,6 @@ ul[role='list'] {
 }
 
 .snippet-tabs {
-  position: relative;
-  z-index: 1001;
   display: flex;
   gap: 3px;
   flex-wrap: nowrap;

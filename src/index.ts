@@ -1,6 +1,6 @@
 import { applyPreset, inkParams, PRESET_CONFIGS, type CaptureMode, type InkParams, type PresetName } from './gl/params';
 import { InkRenderer, type InkFrame, type InkSource } from './gl/renderer';
-import { InkTransition, type ClickRecord, type Point } from './ui/inkTransition';
+import { InkTransition, type ClickRecord, type InkTransitionOptions, type Point } from './ui/inkTransition';
 import { applyTheme, getTheme, otherTheme, type Theme } from './ui/theme';
 
 export interface CreateInkTransitionOptions {
@@ -12,6 +12,17 @@ export interface CreateInkTransitionOptions {
   preset?: PresetName;
   /** Capture mode strategy: 'viewport' (fast, recommended) or 'full'. Default: 'viewport' */
   captureMode?: CaptureMode;
+  /**
+   * Whether to capture snapshot on demand when toggle() is called (true)
+   * or pre-cache both themes in advance in the background (false).
+   * Default: true
+   */
+  captureOnToggle?: boolean;
+  /**
+   * Callback fired immediately when theme toggles, allowing frameworks
+   * (React, Vue, Svelte) to synchronize their state and re-render.
+   */
+  onToggle?: (theme: Theme) => void;
 }
 
 /**
@@ -19,11 +30,13 @@ export interface CreateInkTransitionOptions {
  *
  * @example
  * ```ts
- * import { createInkTransition } from 'ink-bleed-theme-changer';
+ * import { createInkTransition } from '@pramuditha/theme.changer';
  *
  * const ink = createInkTransition({
  *   toggleButton: document.querySelector('#theme-toggle'),
  *   preset: 'ember',
+ *   captureOnToggle: true,
+ *   onToggle: (theme) => console.log('Switched to', theme),
  * });
  * ```
  */
@@ -46,7 +59,11 @@ export function createInkTransition(options: CreateInkTransitionOptions = {}): I
   }
 
   const toggle = options.toggleButton ?? document.querySelector<HTMLButtonElement>('#theme-toggle');
-  return new InkTransition(canvas, toggle, { webgl: options.webgl });
+  return new InkTransition(canvas, toggle, {
+    webgl: options.webgl,
+    captureOnToggle: options.captureOnToggle,
+    onToggle: options.onToggle,
+  });
 }
 
 export {
@@ -66,6 +83,7 @@ export type {
   InkParams,
   InkFrame,
   InkSource,
+  InkTransitionOptions,
   ClickRecord,
   Point,
   Theme,

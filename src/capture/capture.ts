@@ -31,6 +31,15 @@ const BACKGROUND: Record<Theme, string> = {
 
 const isCoarsePointer = (): boolean => window.matchMedia('(pointer: coarse)').matches;
 
+const getComputedBg = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+  if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') return bodyBg;
+  const docBg = window.getComputedStyle(document.documentElement).backgroundColor;
+  if (docBg && docBg !== 'rgba(0, 0, 0, 0)' && docBg !== 'transparent') return docBg;
+  return null;
+};
+
 /** Device-pixel ratio used for both the snapshots and the overlay canvas. */
 export function renderScale(): number {
   const cap = isCoarsePointer() ? 1.5 : 2;
@@ -67,7 +76,7 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
 
   const canvas = await html2canvas(document.body, {
     scale: safeScale,
-    backgroundColor: BACKGROUND[theme],
+    backgroundColor: getComputedBg() ?? BACKGROUND[theme],
     x: currentScrollX,
     y: currentScrollY,
     width,
@@ -80,6 +89,10 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
     useCORS: true,
     onclone: (doc) => {
       doc.documentElement.dataset.theme = theme;
+      doc.documentElement.classList.remove('light-theme', 'dark-theme');
+      doc.documentElement.classList.add(`${theme}-theme`);
+      doc.documentElement.classList.toggle('dark', theme === 'dark');
+      doc.documentElement.classList.toggle('light', theme === 'light');
       // The live toggle is drawn above the overlay, so leave a hole for it.
       doc.querySelectorAll<HTMLElement>('[data-ink-live]').forEach((el) => {
         el.style.visibility = 'hidden';
