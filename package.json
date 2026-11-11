@@ -24,6 +24,7 @@
     "build:lib": "vite build --mode lib",
     "build": "vite build && vite build --mode lib",
     "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {

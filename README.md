@@ -6,8 +6,11 @@
 ![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
 ![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/Demo-GitHub_Pages-2ea44f?style=for-the-badge&logo=github)](https://pramudithan.github.io/theme.changer/)
 
 A high-performance organic theme transition engine that replaces abrupt cuts and standard opacity fades with fluid, procedurally-shaded transitions (Ink Bleed, Watercolor, Smoke, Ember, and Liquid Ripple) powered by WebGL2 fragment shaders, noise textures, and smart viewport snapshotting.
+
+**Live Marketing Page**: [https://pramudithan.github.io/theme.changer/](https://pramudithan.github.io/theme.changer/)
 
 ---
 
