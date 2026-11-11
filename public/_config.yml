@@ -1,0 +1,6 @@
+# Disable Jekyll theme and plugins for static Vite build
+theme: null
+plugins: []
+markdown: kramdown
+include:
+  - .nojekyll
