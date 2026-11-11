@@ -362,9 +362,24 @@
 
 @media (max-width: 480px) {
   .demo-panel {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
     width: auto;
+    max-width: calc(100vw - 20px);
+    padding: 10px 12px 8px;
+  }
+  .demo-panel__segmented {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .demo-panel__segmented::-webkit-scrollbar {
+    display: none;
+  }
+  .demo-panel__seg-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+    flex: 1 0 auto;
   }
 }
