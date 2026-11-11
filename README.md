@@ -146,6 +146,12 @@ npm run build
 
 ---
 
+## Acknowledgements & Attribution
+
+Special credit and appreciation to [Codemure](https://github.com/codemure-official) for creating the original ink bleed transition base and shader foundation that this project builds upon.
+
+---
+
 ## License
 
-MIT License. Crafted by [Pramuditha Nadun](https://www.pramuditha.is-a.dev/).
+MIT License. Designed and maintained by [Pramuditha Nadun](https://www.pramuditha.is-a.dev/). Original base by [Codemure](https://github.com/codemure-official).

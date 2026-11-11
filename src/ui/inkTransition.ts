@@ -80,6 +80,9 @@ export class InkTransition {
       () => this.scheduleCapture(0),
     );
 
+    // Kick off pre-capture immediately on mount so snapshots are ready on the very first click
+    this.scheduleCapture(0);
+
     window.addEventListener('resize', () => {
       this.renderer?.resize(renderScale());
       if (this.frame) this.draw();
@@ -90,7 +93,7 @@ export class InkTransition {
     // Snapshots are skipped under reduced motion; take them if the preference is lifted.
     reducedMotion.addEventListener('change', () => this.scheduleCapture(0));
 
-    void document.fonts.ready.then(() => this.scheduleCapture(0));
+    void document.fonts.ready.then(() => this.scheduleCapture(50));
   }
 
   get isWebGL(): boolean {
@@ -272,30 +275,21 @@ export class InkTransition {
     this.hide();
   }
 
-  /** Plain CSS colour transition with native View Transitions API enhancement where supported. */
+  /** Plain CSS colour transition fallback without jumping or flashing. */
   private crossFade(to: Theme): void {
     const motion = !reducedMotion.matches;
-
-    // Use native View Transitions API if supported and motion is allowed
-    const docWithVT = document as unknown as { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
-    if (motion && typeof docWithVT.startViewTransition === 'function') {
-      docWithVT.startViewTransition(() => {
-        applyTheme(to, this.toggleButton);
-        this.icon?.set(to);
-      });
-      if (this.captureQueued) this.scheduleCapture(0);
-      return;
-    }
-
     const root = document.documentElement;
+
     root.classList.add('theme-fade');
     root.style.setProperty('--theme-fade', `${CSS_FADE_S}s`);
     applyTheme(to, this.toggleButton);
+
     if (motion) {
       this.icon?.morphTo(to, { duration: CSS_FADE_S * 1.6, ease: 'power2.inOut', timeScale: 1 });
     } else {
       this.icon?.set(to);
     }
+
     window.clearTimeout(this.cssFadeTimer);
     this.cssFadeTimer = window.setTimeout(() => {
       root.classList.remove('theme-fade');

@@ -116,7 +116,7 @@ export const inkParams: InkParams = {
   drift: PRESET_CONFIGS.ink.params.drift,
   timeScale: 1,
   preset: 'ink',
-  captureMode: 'viewport',
+  captureMode: 'full',
 };
 
 /** Apply a preset to live inkParams. */

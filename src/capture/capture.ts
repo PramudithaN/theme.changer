@@ -53,8 +53,7 @@ export function documentSize(): { width: number; height: number } {
  */
 export function layoutKey(scale: number): string {
   const { width, height } = documentSize();
-  const scrollKey = inkParams.captureMode === 'viewport' ? `@s${window.scrollX},${window.scrollY}` : '';
-  return `${inkParams.captureMode}:${width}x${height}@${scale}${scrollKey}`;
+  return `${inkParams.captureMode}:${width}x${height}@${scale}`;
 }
 
 let _lastCaptureMs = 0;
@@ -85,10 +84,10 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
     y: isViewport ? currentScrollY : 0,
     width,
     height,
-    scrollX: isViewport ? -currentScrollX : 0,
-    scrollY: isViewport ? -currentScrollY : 0,
+    scrollX: 0,
+    scrollY: 0,
     windowWidth: width,
-    windowHeight: height,
+    windowHeight: isViewport ? height : document.documentElement.clientHeight,
     logging: false,
     useCORS: true,
     onclone: (doc) => {

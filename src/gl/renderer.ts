@@ -186,9 +186,16 @@ export class InkRenderer {
     entry.captureMs = snapshot.ms;
   }
 
-  /** True when a snapshot for `theme` exists and matches the current layout. */
+  /** True when a snapshot for `theme` exists and is valid to render. */
   hasValid(theme: Theme, key: string): boolean {
-    return !this.lost && this.textures.get(theme)?.key === key;
+    const t = this.textures.get(theme);
+    if (this.lost || !t || !t.texture) return false;
+    if (t.key === key) return true;
+    // In full mode, if scale matches, the full-page texture is valid across scroll
+    if (!t.isViewport && Math.abs(t.scale - this.canvasScale) < 0.01) {
+      return true;
+    }
+    return false;
   }
 
   /**
