@@ -1133,3 +1133,18 @@ html.theme-fade *::after {
     stroke var(--theme-fade, 0.45s) ease,
     box-shadow var(--theme-fade, 0.45s) ease !important;
 }
+
+/* Interactive lock while theme transition is actively animating */
+html.is-animating #theme-toggle,
+html.is-animating [data-trigger-toggle],
+html.is-animating [data-select-preset],
+html.is-animating [data-interactive-stage] {
+  pointer-events: none !important;
+  cursor: wait !important;
+}
+
+html.is-animating .demo-panel__seg-btn,
+html.is-animating .demo-panel__btn-replay {
+  pointer-events: none !important;
+  opacity: 0.6;
+}

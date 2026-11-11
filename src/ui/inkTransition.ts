@@ -109,7 +109,7 @@ export class InkTransition {
   }
 
   get isAnimating(): boolean {
-    return this.frame !== null;
+    return this.frame !== null || this.cssFadeTimer !== 0;
   }
 
   /** The most recent click, for "replay last click". */
@@ -143,6 +143,7 @@ export class InkTransition {
    * `seed` reproduces a previous spread exactly.
    */
   toggle(point?: Point, seed?: InkFrame['seed']): void {
+    if (this.isAnimating) return;
     window.clearTimeout(this.replayTimer);
     const to = otherTheme(getTheme());
     const renderer = this.renderer;
@@ -213,6 +214,7 @@ export class InkTransition {
     this.state.time = 0;
 
     const chromeFrom = this.icon?.readChrome();
+    document.documentElement.classList.add('is-animating');
     renderer.resize(scale);
     this.draw();
     // Same task: the overlay (showing "from") and the flipped DOM hit the screen together.
@@ -248,6 +250,7 @@ export class InkTransition {
    * first frame for the recording), then spread again with the same point and seed.
    */
   replay(): boolean {
+    if (this.isAnimating) return false;
     const last = this.last;
     if (!last) return false;
     window.clearTimeout(this.replayTimer);
@@ -300,6 +303,7 @@ export class InkTransition {
     this.fade = null;
     this.frame = null;
     this.renderer?.canvas.classList.remove('is-active');
+    document.documentElement.classList.remove('is-animating');
     if (this.captureQueued) this.scheduleCapture(0);
   }
 
@@ -308,6 +312,7 @@ export class InkTransition {
     this.tween?.kill();
     this.fade?.kill();
     this.tween = null;
+    document.documentElement.classList.remove('is-animating');
     this.hide();
   }
 
@@ -317,6 +322,7 @@ export class InkTransition {
     const root = document.documentElement;
 
     root.classList.add('theme-fade');
+    root.classList.add('is-animating');
     root.style.setProperty('--theme-fade', `${CSS_FADE_S}s`);
     applyTheme(to, this.toggleButton);
 
@@ -329,6 +335,8 @@ export class InkTransition {
     window.clearTimeout(this.cssFadeTimer);
     this.cssFadeTimer = window.setTimeout(() => {
       root.classList.remove('theme-fade');
+      root.classList.remove('is-animating');
+      this.cssFadeTimer = 0;
       if (this.captureQueued) this.scheduleCapture(0);
     }, CSS_FADE_S * 1000 + 50);
   }
@@ -351,11 +359,13 @@ export class InkTransition {
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
 
+  private forceCapture = false;
+
   // ---------- Capture scheduling ----------
 
   /** Invalidate cached snapshots and re-capture them in the background. */
   public invalidate(delay: number = 0): void {
-    this.renderer?.invalidate();
+    this.forceCapture = true;
     this.scheduleCapture(delay);
   }
 
@@ -378,7 +388,11 @@ export class InkTransition {
     const scale = renderScale();
     const key = layoutKey(scale);
     const current = getTheme();
-    const themes: Theme[] = [current, otherTheme(current)].filter((t) => !renderer.hasValid(t, key));
+    const force = this.forceCapture;
+    this.forceCapture = false;
+    const themes: Theme[] = force
+      ? [current, otherTheme(current)]
+      : [current, otherTheme(current)].filter((t) => !renderer.hasValid(t, key));
     this.captureQueued = false;
     if (themes.length === 0) return;
 

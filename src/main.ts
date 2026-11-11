@@ -38,6 +38,7 @@ const panel = new DemoPanel(ink, {
 });
 
 toggle?.addEventListener('click', (e) => {
+  if (ink.isAnimating) return;
   // detail === 0 means a keyboard-activated click (Enter/Space): spread from the button.
   ink.toggle(e.detail === 0 ? undefined : { x: e.clientX, y: e.clientY });
   panel.refresh();
@@ -46,6 +47,7 @@ toggle?.addEventListener('click', (e) => {
 // Primary CTA toggle buttons
 document.querySelectorAll<HTMLElement>('[data-trigger-toggle]').forEach((btn) => {
   btn.addEventListener('click', (e) => {
+    if (ink.isAnimating) return;
     ink.toggle({ x: e.clientX, y: e.clientY });
     panel.refresh();
   });
@@ -74,6 +76,7 @@ const SHADER_DESCS: Record<PresetName, string> = {
 
 if (stageCanvas) {
   stageCanvas.addEventListener('click', (e) => {
+    if (ink.isAnimating) return;
     const rect = stageCanvas.getBoundingClientRect();
     const relX = e.clientX - rect.left;
     const relY = e.clientY - rect.top;
@@ -106,6 +109,7 @@ function syncPlaygroundPreset(preset: PresetName) {
 const shaderTabs = document.querySelectorAll<HTMLButtonElement>('[data-select-preset]');
 shaderTabs.forEach((tab) => {
   tab.addEventListener('click', (e) => {
+    if (ink.isAnimating) return;
     const preset = tab.dataset.selectPreset as PresetName;
     if (!preset) return;
 
@@ -114,7 +118,6 @@ shaderTabs.forEach((tab) => {
 
     ink.toggle({ x: e.clientX, y: e.clientY });
     panel.refresh();
-    ink.invalidate();
   });
 });
 
@@ -195,6 +198,7 @@ window.addEventListener('keydown', (e) => {
 
   switch (e.key.toLowerCase()) {
     case 't':
+      if (ink.isAnimating) return;
       ink.toggle();
       panel.refresh();
       break;
@@ -202,6 +206,7 @@ window.addEventListener('keydown', (e) => {
       panel.toggle();
       break;
     case 'r':
+      if (ink.isAnimating) return;
       ink.replay();
       break;
     default:
