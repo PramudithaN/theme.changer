@@ -1,5 +1,12 @@
 # theme.changer
 
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![WebGL2](https://img.shields.io/badge/WebGL2-990000?style=for-the-badge&logo=webgl&logoColor=white)
+![GSAP](https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
+![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+
 A high-performance organic theme transition engine that replaces abrupt cuts and standard opacity fades with fluid, procedurally-shaded transitions (Ink Bleed, Watercolor, Smoke, Ember, and Liquid Ripple) powered by WebGL2 fragment shaders, noise textures, and smart viewport snapshotting.
 
 ---
