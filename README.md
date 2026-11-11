@@ -39,16 +39,16 @@ A high-performance organic theme transition engine that replaces abrupt cuts and
 
 ## Installing as an NPM Package
 
-You can install `theme.changer` in any modern web application:
+You can install `@pramuditha/theme.changer` in any modern web application:
 
 ```bash
-npm install theme.changer gsap html2canvas
+npm install @pramuditha/theme.changer gsap html2canvas
 ```
 
 ### Basic Usage
 
 ```ts
-import { createInkTransition } from 'theme.changer';
+import { createInkTransition } from '@pramuditha/theme.changer';
 
 // Mount the GPU transition engine
 const ink = createInkTransition({

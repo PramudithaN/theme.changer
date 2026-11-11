@@ -29,6 +29,7 @@ const SLOW_MO = 0.25;
 export interface PanelOptions {
   showMarker: boolean;
   onMarkerChange: (show: boolean) => void;
+  onPresetChange?: (preset: PresetName) => void;
 }
 
 /** Applies persisted settings to `inkParams`. Call before the first transition. */
@@ -213,6 +214,7 @@ export class DemoPanel {
       btn.classList.toggle('is-active', btn.dataset.preset === key);
     });
 
+    this.opts.onPresetChange?.(key);
     this.save();
   }
 

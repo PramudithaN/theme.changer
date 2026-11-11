@@ -353,6 +353,12 @@ export class InkTransition {
 
   // ---------- Capture scheduling ----------
 
+  /** Invalidate cached snapshots and re-capture them in the background. */
+  public invalidate(delay: number = 0): void {
+    this.renderer?.invalidate();
+    this.scheduleCapture(delay);
+  }
+
   public scheduleCapture(delay: number = 0): void {
     window.clearTimeout(this.resizeTimer);
     this.resizeTimer = window.setTimeout(() => void this.captureAll(), delay);

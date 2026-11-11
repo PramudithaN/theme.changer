@@ -96,7 +96,7 @@
         <h2 class="section-title" id="stage-title">Interactive Stage</h2>
         <p class="section-desc">Select a shader preset and click anywhere inside the canvas to trigger the transition from that origin.</p>
       </div>
-      <div class="stage-telemetry">
+      <div class="stage-telemetry" data-ink-live>
         <span class="hud-label">Origin:</span>
         <span class="hud-val" id="hud-coords">Click anywhere</span>
       </div>
@@ -104,7 +104,7 @@
 
     <div class="playground">
       <!-- Shader Preset Bar -->
-      <div class="shader-bar" role="tablist" aria-label="Shader Model Selector">
+      <div class="shader-bar" role="tablist" aria-label="Shader Model Selector" data-ink-live>
         <button class="shader-tab is-active" type="button" data-select-preset="ink">
           <span class="tab-dot"></span>
           Ink Bleed
@@ -130,8 +130,8 @@
       <!-- Live Interactive Stage Area -->
       <div class="stage-canvas" data-interactive-stage>
         <div class="stage-watermark">Click to spread ink</div>
-        <div class="stage-reticle" id="stage-reticle" aria-hidden="true"></div>
-        <div class="stage-specs">
+        <div class="stage-reticle" id="stage-reticle" aria-hidden="true" data-ink-live></div>
+        <div class="stage-specs" data-ink-live>
           <div class="spec-col">
             <span class="spec-k">Shader</span>
             <span class="spec-v" id="spec-shader">Simplex FBM + Curl</span>
@@ -200,7 +200,7 @@
     <!-- Package Manager Selector -->
     <div class="cli-panel">
       <div class="cli-panel__header">
-        <div class="cli-tabs">
+        <div class="cli-tabs" data-ink-live>
           <button class="cli-tab is-active" type="button" data-pkg="npm">npm</button>
           <button class="cli-tab" type="button" data-pkg="pnpm">pnpm</button>
           <button class="cli-tab" type="button" data-pkg="yarn">yarn</button>
@@ -216,7 +216,7 @@
     <!-- Code Examples with Framework Tabs -->
     <div class="snippet-panel">
       <div class="snippet-header">
-        <div class="snippet-tabs">
+        <div class="snippet-tabs" data-ink-live>
           <button class="snippet-tab is-active" type="button" data-lang="ts">TypeScript</button>
           <button class="snippet-tab" type="button" data-lang="react">React / Next.js</button>
           <button class="snippet-tab" type="button" data-lang="vue">Vue</button>

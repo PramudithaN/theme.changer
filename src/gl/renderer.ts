@@ -15,6 +15,7 @@ interface ThemeTexture {
   scrollX: number;
   scrollY: number;
   captureMs: number;
+  dirty?: boolean;
 }
 
 /** Offscreen copy of what the overlay showed when a transition was interrupted. */
@@ -171,6 +172,7 @@ export class InkRenderer {
         scrollX: 0,
         scrollY: 0,
         captureMs: 0,
+        dirty: false,
       };
       this.textures.set(snapshot.theme, entry);
     }
@@ -184,12 +186,20 @@ export class InkRenderer {
     entry.scrollX = snapshot.scrollX;
     entry.scrollY = snapshot.scrollY;
     entry.captureMs = snapshot.ms;
+    entry.dirty = false;
+  }
+
+  /** Mark all cached textures as dirty so fresh snapshots are captured. */
+  invalidate(): void {
+    for (const t of this.textures.values()) {
+      t.dirty = true;
+    }
   }
 
   /** True when a snapshot for `theme` exists and is valid for the current viewport. */
   hasValid(theme: Theme, key: string): boolean {
     const t = this.textures.get(theme);
-    if (this.lost || !t || !t.texture) return false;
+    if (this.lost || !t || !t.texture || t.dirty) return false;
     if (t.key === key) return true;
     // Valid if viewport dimensions match and scroll position is within 30px
     if (t.width === this.canvas.width && t.height === this.canvas.height && Math.abs(window.scrollY - t.scrollY) < 30) {

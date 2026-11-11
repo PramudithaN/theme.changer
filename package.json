@@ -1,6 +1,9 @@
 {
-  "name": "theme.changer",
+  "name": "@pramuditha/theme.changer",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "GPU-accelerated organic theme transitions using WebGL2 shaders, noise textures, and smart viewport capture.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -14,9 +17,7 @@
     }
   },
   "files": [
-    "dist/index.js",
-    "dist/index.cjs",
-    "dist/index.d.ts"
+    "dist"
   ],
   "scripts": {
     "dev": "vite",

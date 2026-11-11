@@ -32,6 +32,9 @@ const panel = new DemoPanel(ink, {
   onMarkerChange: (show) => {
     showMarker = show;
   },
+  onPresetChange: (preset) => {
+    syncPlaygroundPreset(preset);
+  },
 });
 
 toggle?.addEventListener('click', (e) => {
@@ -92,6 +95,13 @@ if (stageCanvas) {
   });
 }
 
+function syncPlaygroundPreset(preset: PresetName) {
+  shaderTabs.forEach((t) => t.classList.toggle('is-active', t.dataset.selectPreset === preset));
+  if (specShader && SHADER_DESCS[preset]) {
+    specShader.textContent = SHADER_DESCS[preset];
+  }
+}
+
 // Shader Preset Tabs in Playground
 const shaderTabs = document.querySelectorAll<HTMLButtonElement>('[data-select-preset]');
 shaderTabs.forEach((tab) => {
@@ -99,15 +109,12 @@ shaderTabs.forEach((tab) => {
     const preset = tab.dataset.selectPreset as PresetName;
     if (!preset) return;
 
-    shaderTabs.forEach((t) => t.classList.toggle('is-active', t === tab));
+    syncPlaygroundPreset(preset);
     panel.selectPreset(preset);
-
-    if (specShader && SHADER_DESCS[preset]) {
-      specShader.textContent = SHADER_DESCS[preset];
-    }
 
     ink.toggle({ x: e.clientX, y: e.clientY });
     panel.refresh();
+    ink.invalidate();
   });
 });
 
@@ -124,6 +131,7 @@ snippetTabs.forEach((tab) => {
     snippetCodes.forEach((code) => {
       code.classList.toggle('is-hidden', code.dataset.code !== lang);
     });
+    ink.invalidate();
   });
 });
 
@@ -145,6 +153,7 @@ pkgTabs.forEach((tab) => {
     if (pkg && pkg in PKG_COMMANDS && pkgCmdDisplay) {
       pkgTabs.forEach((t) => t.classList.toggle('is-active', t === tab));
       pkgCmdDisplay.textContent = PKG_COMMANDS[pkg] || '';
+      ink.invalidate();
     }
   });
 });
