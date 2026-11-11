@@ -145,9 +145,20 @@ ul[role='list'] {
 /* ---------- Navigation ---------- */
 
 .site-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   border-bottom: 1px solid var(--line);
   background: var(--bg);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
+  .site-header {
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 }
 
 .nav {

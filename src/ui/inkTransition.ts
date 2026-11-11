@@ -83,6 +83,14 @@ export class InkTransition {
     // Kick off pre-capture immediately on mount so snapshots are ready on the very first click
     this.scheduleCapture(0);
 
+    let scrollDebounce = 0;
+    window.addEventListener('scroll', () => {
+      window.clearTimeout(scrollDebounce);
+      scrollDebounce = window.setTimeout(() => {
+        this.scheduleCapture(0);
+      }, 120);
+    }, { passive: true });
+
     window.addEventListener('resize', () => {
       this.renderer?.resize(renderScale());
       if (this.frame) this.draw();
@@ -136,7 +144,6 @@ export class InkTransition {
    */
   toggle(point?: Point, seed?: InkFrame['seed']): void {
     window.clearTimeout(this.replayTimer);
-    // The live DOM always holds the latest target, so this is right even mid-transition.
     const to = otherTheme(getTheme());
     const renderer = this.renderer;
     const scale = renderScale();
@@ -151,11 +158,40 @@ export class InkTransition {
       (interrupting || renderer.hasValid(getTheme(), key));
 
     if (!canAnimate || !renderer) {
+      if (renderer && !renderer.isLost && !reducedMotion.matches) {
+        void this.captureAndAnimate(to, point, seed);
+        return;
+      }
       this.cancel();
       this.crossFade(to);
-      if (renderer && !reducedMotion.matches) this.scheduleCapture(0);
       return;
     }
+
+    this.startAnimation(to, point, seed);
+  }
+
+  private async captureAndAnimate(to: Theme, point?: Point, seed?: InkFrame['seed']): Promise<void> {
+    if (this.capturing) return;
+    try {
+      await this.captureAll();
+      const renderer = this.renderer;
+      const scale = renderScale();
+      const key = layoutKey(scale);
+      if (renderer && renderer.hasValid(to, key)) {
+        this.startAnimation(to, point, seed);
+      } else {
+        this.crossFade(to);
+      }
+    } catch {
+      this.crossFade(to);
+    }
+  }
+
+  private startAnimation(to: Theme, point?: Point, seed?: InkFrame['seed']): void {
+    const renderer = this.renderer;
+    if (!renderer) return;
+    const scale = renderScale();
+    const interrupting = this.frame !== null;
 
     // Interrupted: freeze exactly what is on screen and spread the new ink over it.
     let from: InkSource = getTheme();
@@ -346,15 +382,10 @@ export class InkTransition {
       for (const theme of themes) {
         const snap = await capturePage(theme, scale, renderer.maxTextureSize);
         if (gen !== this.captureGen) return;
-        if (snap.key !== layoutKey(renderScale())) {
-          // Layout changed while capturing; this snapshot is already stale.
-          this.captureQueued = true;
-          break;
-        }
         renderer.upload(snap);
         if (import.meta.env.DEV) {
           console.debug(
-            `[ink] captured ${theme} (${snap.isViewport ? 'viewport' : 'full'}) ${snap.canvas.width}×${snap.canvas.height} in ${snap.ms.toFixed(0)}ms`,
+            `[ink] captured ${theme} ${snap.canvas.width}×${snap.canvas.height} in ${snap.ms.toFixed(0)}ms`,
           );
         }
       }

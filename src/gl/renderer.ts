@@ -186,13 +186,13 @@ export class InkRenderer {
     entry.captureMs = snapshot.ms;
   }
 
-  /** True when a snapshot for `theme` exists and is valid to render. */
+  /** True when a snapshot for `theme` exists and is valid for the current viewport. */
   hasValid(theme: Theme, key: string): boolean {
     const t = this.textures.get(theme);
     if (this.lost || !t || !t.texture) return false;
     if (t.key === key) return true;
-    // In full mode, if scale matches, the full-page texture is valid across scroll
-    if (!t.isViewport && Math.abs(t.scale - this.canvasScale) < 0.01) {
+    // Valid if viewport dimensions match and scroll position is within 30px
+    if (t.width === this.canvas.width && t.height === this.canvas.height && Math.abs(window.scrollY - t.scrollY) < 30) {
       return true;
     }
     return false;
@@ -261,30 +261,26 @@ export class InkRenderer {
     if (source === 'composite') {
       const c = this.composites[this.activeComposite];
       if (!c) return null;
-      // Keep the frozen frame glued to the page if the user scrolls mid-transition.
       return {
         texture: c.texture,
         width: c.width,
         height: c.height,
         ratio: 1,
-        offsetX: Math.round((window.scrollX - c.scrollX) * this.canvasScale),
-        offsetY: Math.round((window.scrollY - c.scrollY) * this.canvasScale),
+        offsetX: 0,
+        offsetY: 0,
         flipY: true,
       };
     }
     const t = this.textures.get(source);
     if (!t) return null;
 
-    const scrollDiffX = t.isViewport ? window.scrollX - t.scrollX : window.scrollX;
-    const scrollDiffY = t.isViewport ? window.scrollY - t.scrollY : window.scrollY;
-
     return {
       texture: t.texture,
       width: t.width,
       height: t.height,
       ratio: t.scale / this.canvasScale,
-      offsetX: Math.floor(scrollDiffX * t.scale + 0.5),
-      offsetY: Math.floor(scrollDiffY * t.scale + 0.5),
+      offsetX: 0,
+      offsetY: 0,
       flipY: false,
     };
   }

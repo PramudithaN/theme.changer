@@ -1,4 +1,3 @@
-import { inkParams } from '../gl/params';
 import type { Theme } from '../ui/theme';
 
 /**
@@ -40,12 +39,7 @@ export function renderScale(): number {
 
 export function documentSize(): { width: number; height: number } {
   const el = document.documentElement;
-  if (inkParams.captureMode === 'viewport') {
-    return { width: el.clientWidth, height: el.clientHeight };
-  }
-  // Full mode with safety clamp to prevent GPU texture overflow on long articles
-  const maxHeight = Math.min(Math.max(el.scrollHeight, el.clientHeight), 4096);
-  return { width: el.clientWidth, height: maxHeight };
+  return { width: el.clientWidth, height: el.clientHeight };
 }
 
 /**
@@ -53,7 +47,7 @@ export function documentSize(): { width: number; height: number } {
  */
 export function layoutKey(scale: number): string {
   const { width, height } = documentSize();
-  return `${inkParams.captureMode}:${width}x${height}@${scale}`;
+  return `${width}x${height}@${scale}@${Math.round(window.scrollY)}`;
 }
 
 let _lastCaptureMs = 0;
@@ -64,7 +58,6 @@ export function getLastCaptureDurationMs(): number {
 export async function capturePage(theme: Theme, scale: number, maxTextureSize: number): Promise<Snapshot> {
   const t0 = performance.now();
   const key = layoutKey(scale);
-  const isViewport = inkParams.captureMode === 'viewport';
   const { width, height } = documentSize();
 
   // Current scroll position
@@ -80,14 +73,14 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
   const canvas = await html2canvas(document.body, {
     scale: safeScale,
     backgroundColor: BACKGROUND[theme],
-    x: isViewport ? currentScrollX : 0,
-    y: isViewport ? currentScrollY : 0,
+    x: currentScrollX,
+    y: currentScrollY,
     width,
     height,
-    scrollX: 0,
-    scrollY: 0,
+    scrollX: currentScrollX,
+    scrollY: currentScrollY,
     windowWidth: width,
-    windowHeight: isViewport ? height : document.documentElement.clientHeight,
+    windowHeight: height,
     logging: false,
     useCORS: true,
     onclone: (doc) => {
@@ -108,8 +101,8 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
     scale: safeScale,
     key,
     ms: durationMs,
-    isViewport,
-    scrollX: isViewport ? currentScrollX : 0,
-    scrollY: isViewport ? currentScrollY : 0,
+    isViewport: true,
+    scrollX: currentScrollX,
+    scrollY: currentScrollY,
   };
 }
