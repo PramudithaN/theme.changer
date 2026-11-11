@@ -50,11 +50,6 @@ export function layoutKey(scale: number): string {
   return `${width}x${height}@${scale}@${Math.round(window.scrollY)}`;
 }
 
-let _lastCaptureMs = 0;
-export function getLastCaptureDurationMs(): number {
-  return _lastCaptureMs;
-}
-
 export async function capturePage(theme: Theme, scale: number, maxTextureSize: number): Promise<Snapshot> {
   const t0 = performance.now();
   const key = layoutKey(scale);
@@ -93,7 +88,6 @@ export async function capturePage(theme: Theme, scale: number, maxTextureSize: n
   });
 
   const durationMs = performance.now() - t0;
-  _lastCaptureMs = durationMs;
 
   return {
     theme,

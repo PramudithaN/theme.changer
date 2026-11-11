@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
         }),
       ],
       build: {
+        copyPublicDir: false,
         lib: {
           entry: resolve(process.cwd(), 'src/index.ts'),
           name: 'ThemeChanger',
@@ -29,7 +30,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         outDir: 'dist',
-        emptyOutDir: false,
+        emptyOutDir: true,
       },
     };
   }

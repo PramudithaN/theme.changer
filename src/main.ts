@@ -55,18 +55,6 @@ document.querySelectorAll<HTMLElement>('[data-trigger-panel]').forEach((btn) => 
   });
 });
 
-// Preset triggers (if any direct triggers exist)
-document.querySelectorAll<HTMLElement>('[data-trigger-preset]').forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    const preset = btn.dataset.triggerPreset as PresetName;
-    if (preset) {
-      panel.selectPreset(preset);
-      ink.toggle({ x: e.clientX, y: e.clientY });
-      panel.refresh();
-    }
-  });
-});
-
 // Interactive Playground Stage
 const stageCanvas = document.querySelector<HTMLElement>('[data-interactive-stage]');
 const stageReticle = document.querySelector<HTMLElement>('#stage-reticle');

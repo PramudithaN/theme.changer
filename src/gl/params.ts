@@ -132,9 +132,3 @@ export function getRimColor(theme: Theme, presetName: PresetName = inkParams.pre
   const preset = PRESET_CONFIGS[presetName] || PRESET_CONFIGS.ink;
   return preset.rimColor[theme] || PRESET_CONFIGS.ink.rimColor[theme];
 }
-
-/** Legacy export for backward compatibility */
-export const RIM_COLOR: Record<Theme, [number, number, number]> = {
-  dark: [0.0, 0.0, 0.01],
-  light: [1.0, 0.996, 0.985],
-};

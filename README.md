@@ -10,7 +10,7 @@
 
 A high-performance organic theme transition engine that replaces abrupt cuts and standard opacity fades with fluid, procedurally-shaded transitions (Ink Bleed, Watercolor, Smoke, Ember, and Liquid Ripple) powered by WebGL2 fragment shaders, noise textures, and smart viewport snapshotting.
 
-**Live Marketing Page**: [https://pramudithan.github.io/theme.changer/](https://pramudithan.github.io/theme.changer/)
+**Go check it out**: [https://pramudithan.github.io/theme.changer/](https://pramudithan.github.io/theme.changer/)
 
 ---
 
