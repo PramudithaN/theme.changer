@@ -2,29 +2,33 @@
 
 <header class="site-header">
   <div class="container nav">
-    <a class="wordmark" href="#" aria-label="Your Name, home">
-      <span class="wordmark__dot" aria-hidden="true"></span>
-      Codemure
-    </a>
+    <div class="nav__brand">
+      <a class="wordmark" href="#" aria-label="theme.changer home">
+        <span class="wordmark__dot" aria-hidden="true"></span>
+        theme.changer
+      </a>
+      <span class="version-tag">v1.0.0</span>
+    </div>
 
     <nav class="nav__links" aria-label="Primary">
-      <a href="#work" aria-current="page">Work</a>
-      <a href="#about">About</a>
-      <a href="#journal">Journal</a>
-      <a href="#contact">Contact</a>
+      <a href="#playground" aria-current="page">Playground</a>
+      <a href="#comparison">Comparison</a>
+      <a href="#api">API Reference</a>
+      <a href="#integration">Integration</a>
+      <a href="https://www.pramuditha.is-a.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
+      <a href="https://github.com/PramudithaN" target="_blank" rel="noopener noreferrer">GitHub</a>
     </nav>
 
     <button
       class="theme-toggle"
       id="theme-toggle"
       type="button"
-      aria-label="Dark mode"
+      aria-label="Toggle theme"
       aria-pressed="false"
-      title="Toggle dark mode (T)"
+      title="Toggle theme (T)"
       data-ink-live
     >
       <svg class="theme-toggle__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-        <!-- Sun body; morphed into the moon crescent by src/ui/themeIcon.ts -->
         <path class="theme-toggle__body" d="M12 7a5 5 0 1 1 0 10a5 5 0 1 1 0-10z" />
         <g class="theme-toggle__rays">
           <line x1="12" y1="1.5" x2="12" y2="3.5" />
@@ -42,100 +46,332 @@
 </header>
 
 <main id="main">
+  <!-- Hero -->
   <section class="hero container" aria-labelledby="hero-title">
-    <p class="eyebrow">
-      <span class="status-dot" aria-hidden="true"></span>
-      Independent product designer · Lisbon · Booking spring 2027
-    </p>
+    <div class="hero__badge">
+      <span class="badge-dot"></span>
+      <span>WebGL2 GPU Engine</span>
+      <span class="badge-sep">/</span>
+      <span>Zero Layout Flash</span>
+      <span class="badge-sep">/</span>
+      <span>60 FPS</span>
+    </div>
 
     <h1 class="hero__title" id="hero-title">
-      Designing quiet interfaces<br />
-      for <em>loud</em> ideas.
+      GPU-accelerated theme transitions.
     </h1>
 
     <p class="hero__bio">
-      I help early-stage teams turn tangled products into calm, legible tools — from first
-      sketch to shipped design system. Previously design lead at a Series B fintech and a small type foundry.
+      Replaces harsh opacity cuts with procedural ink-bleed, watercolor bloom, smoke, and liquid wavefronts.
+      Runs entirely on the GPU via fragment shaders and lightweight viewport snapshotting.
     </p>
 
     <div class="hero__actions">
-      <a class="button button--primary" href="#work">
-        See selected work
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <button class="button button--primary" type="button" data-trigger-toggle>
+        Run Transition
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <path d="M3 8h10M9 4l4 4-4 4" />
         </svg>
-      </a>
-      <a class="text-link" href="mailto:hello@yourname.studio">hello@codemure.com</a>
+      </button>
+
+      <button class="button button--secondary" type="button" data-trigger-panel>
+        Inspector Controls (D)
+      </button>
+
+      <div class="cli-pill" data-copy="npm i theme.changer">
+        <span class="cli-prompt">$</span>
+        <code class="cli-text">npm i theme.changer</code>
+        <button class="cli-btn" type="button" aria-label="Copy install command" title="Copy command">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
+          <span class="copy-feedback">Copy</span>
+        </button>
+      </div>
     </div>
   </section>
 
-  <section class="work container" id="work" aria-labelledby="work-title">
-    <div class="section-head">
-      <h2 class="section-head__title" id="work-title">Selected work</h2>
-      <span class="section-head__meta">2023 — 2026</span>
+  <!-- Interactive Shader Playground -->
+  <section class="stage-section container" id="playground" aria-labelledby="stage-title">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title" id="stage-title">Interactive Stage</h2>
+        <p class="section-desc">Select a shader preset and click anywhere inside the canvas to trigger the transition from that origin.</p>
+      </div>
+      <div class="stage-telemetry">
+        <span class="hud-label">Origin:</span>
+        <span class="hud-val" id="hud-coords">Click anywhere</span>
+      </div>
     </div>
 
-    <ul class="cards" role="list">
-      <li>
-        <a class="card" href="#tidal">
-          <div class="card__thumb card__thumb--tidal" aria-hidden="true">
-            <span class="tidal__sun"></span>
-            <span class="tidal__wave tidal__wave--1"></span>
-            <span class="tidal__wave tidal__wave--2"></span>
-            <span class="tidal__wave tidal__wave--3"></span>
+    <div class="playground">
+      <!-- Shader Preset Bar -->
+      <div class="shader-bar" role="tablist" aria-label="Shader Model Selector">
+        <button class="shader-tab is-active" type="button" data-select-preset="ink">
+          <span class="tab-dot"></span>
+          Ink Bleed
+        </button>
+        <button class="shader-tab" type="button" data-select-preset="watercolor">
+          <span class="tab-dot"></span>
+          Watercolor
+        </button>
+        <button class="shader-tab" type="button" data-select-preset="smoke">
+          <span class="tab-dot"></span>
+          Smoke
+        </button>
+        <button class="shader-tab" type="button" data-select-preset="ember">
+          <span class="tab-dot"></span>
+          Ember Burn
+        </button>
+        <button class="shader-tab" type="button" data-select-preset="ripple">
+          <span class="tab-dot"></span>
+          Liquid Ripple
+        </button>
+      </div>
+
+      <!-- Live Interactive Stage Area -->
+      <div class="stage-canvas" data-interactive-stage>
+        <div class="stage-watermark">Click to spread ink</div>
+        <div class="stage-reticle" id="stage-reticle" aria-hidden="true"></div>
+        <div class="stage-specs">
+          <div class="spec-col">
+            <span class="spec-k">Shader</span>
+            <span class="spec-v" id="spec-shader">Simplex FBM + Curl</span>
           </div>
-          <div class="card__body">
-            <p class="card__meta">Fintech · iOS &amp; Web · 2026</p>
-            <h3 class="card__title">Tidal — a calmer way to bank</h3>
-            <p class="card__desc">Rebuilt onboarding and the money-movement flows; support tickets fell 38%.</p>
+          <div class="spec-col">
+            <span class="spec-k">Pipeline</span>
+            <span class="spec-v">WebGL2 Double-Buffered FBO</span>
           </div>
-        </a>
-      </li>
-      <li>
-        <a class="card" href="#field-notes">
-          <div class="card__thumb card__thumb--field" aria-hidden="true">
-            <span class="field__glyph">Ff</span>
-            <span class="field__rule"></span>
-            <span class="field__caption">Field Notes · Vol. 04</span>
+          <div class="spec-col">
+            <span class="spec-k">Capture</span>
+            <span class="spec-v">Smart Viewport (~30ms)</span>
           </div>
-          <div class="card__body">
-            <p class="card__meta">Editorial · Type system · 2025</p>
-            <h3 class="card__title">Field Notes Quarterly</h3>
-            <p class="card__desc">A modular reading experience and variable-type system for a print-first magazine.</p>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a class="card" href="#halo">
-          <div class="card__thumb card__thumb--halo" aria-hidden="true">
-            <span class="halo__ring halo__ring--1"></span>
-            <span class="halo__ring halo__ring--2"></span>
-            <span class="halo__ring halo__ring--3"></span>
-            <span class="halo__core"></span>
-          </div>
-          <div class="card__body">
-            <p class="card__meta">Hardware · Companion app · 2024</p>
-            <h3 class="card__title">Halo Home Controller</h3>
-            <p class="card__desc">Ambient controls for a smart-lighting puck, from industrial sketches to firmware UI.</p>
-          </div>
-        </a>
-      </li>
-    </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Side-by-Side Comparison -->
+  <section class="section container" id="comparison" aria-labelledby="comp-title">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title" id="comp-title">Mechanism Comparison</h2>
+        <p class="section-desc">Why traditional CSS transitions fail on complex applications.</p>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="comp-card comp-card--bad">
+        <div class="comp-card__head">
+          <span class="comp-badge comp-badge--bad">Traditional CSS Opacity Transition</span>
+        </div>
+        <ul class="comp-list">
+          <li><strong>Mid-transition contrast drop:</strong> Text becomes washed out and unreadable while opacity blends.</li>
+          <li><strong>Incoherent DOM redraw:</strong> Background and foreground elements blend at different rates, producing a cloudy gray flash.</li>
+          <li><strong>No origin awareness:</strong> The transition happens uniformly everywhere, disconnected from user interaction.</li>
+        </ul>
+      </div>
+
+      <div class="comp-card comp-card--good">
+        <div class="comp-card__head">
+          <span class="comp-badge comp-badge--good">theme.changer Radial SDF Shader</span>
+        </div>
+        <ul class="comp-list">
+          <li><strong>Zero readability loss:</strong> Text remains 100% crisp on both sides of the moving frontier.</li>
+          <li><strong>Organic wave propagation:</strong> Spreads from the exact button or coordinate clicked by the user.</li>
+          <li><strong>Interruptible:</strong> Clicking mid-spread freezes the current GPU frame and propagates the next layer without glitching.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Integration & Package Installation -->
+  <section class="section container" id="integration" aria-labelledby="integ-title">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title" id="integ-title">Installation &amp; Integration</h2>
+        <p class="section-desc">Install from npm and initialize with three lines of code.</p>
+      </div>
+      <span class="section-meta">npm / pnpm / yarn / bun</span>
+    </div>
+
+    <!-- Package Manager Selector -->
+    <div class="cli-panel">
+      <div class="cli-panel__header">
+        <div class="cli-tabs">
+          <button class="cli-tab is-active" type="button" data-pkg="npm">npm</button>
+          <button class="cli-tab" type="button" data-pkg="pnpm">pnpm</button>
+          <button class="cli-tab" type="button" data-pkg="yarn">yarn</button>
+          <button class="cli-tab" type="button" data-pkg="bun">bun</button>
+        </div>
+        <button class="cli-copy-btn" id="pkg-copy-btn" type="button">Copy</button>
+      </div>
+      <div class="cli-panel__body">
+        <code id="pkg-cmd-display">npm install theme.changer gsap html2canvas</code>
+      </div>
+    </div>
+
+    <!-- Code Examples with Framework Tabs -->
+    <div class="snippet-panel">
+      <div class="snippet-header">
+        <div class="snippet-tabs">
+          <button class="snippet-tab is-active" type="button" data-lang="ts">TypeScript</button>
+          <button class="snippet-tab" type="button" data-lang="react">React / Next.js</button>
+          <button class="snippet-tab" type="button" data-lang="vue">Vue</button>
+          <button class="snippet-tab" type="button" data-lang="html">Vanilla HTML</button>
+        </div>
+      </div>
+
+      <div class="snippet-body">
+        <!-- TypeScript -->
+        <pre class="snippet-code" data-code="ts"><code><span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+
+<span class="token-cmt">// Mount the WebGL2 transition engine on your toggle element</span>
+<span class="token-kw">const</span> ink = <span class="token-fn">createInkTransition</span>({
+  toggleButton: document.<span class="token-fn">querySelector</span>(<span class="token-str">'#theme-toggle'</span>),
+  preset: <span class="token-str">'ink'</span>, <span class="token-cmt">// 'ink' | 'watercolor' | 'smoke' | 'ember' | 'ripple'</span>
+  captureMode: <span class="token-str">'viewport'</span>, <span class="token-cmt">// fast ~30ms snapshotting</span>
+});
+
+<span class="token-cmt">// Trigger dynamically from any button click or mouse position</span>
+button.<span class="token-fn">addEventListener</span>(<span class="token-str">'click'</span>, (e) => {
+  ink.<span class="token-fn">toggle</span>({ x: e.clientX, y: e.clientY });
+});</code></pre>
+
+        <!-- React / Next.js -->
+        <pre class="snippet-code is-hidden" data-code="react"><code><span class="token-kw">import</span> { useEffect, useRef } <span class="token-kw">from</span> <span class="token-str">'react'</span>;
+<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+
+<span class="token-kw">export function</span> <span class="token-fn">useThemeChanger</span>() {
+  <span class="token-kw">const</span> inkRef = useRef&lt;InkTransition | <span class="token-kw">null</span>&gt;(<span class="token-kw">null</span>);
+
+  useEffect(() => {
+    inkRef.current = <span class="token-fn">createInkTransition</span>({
+      toggleButton: document.<span class="token-fn">querySelector</span>(<span class="token-str">'#theme-toggle'</span>) <span class="token-kw">as</span> HTMLButtonElement,
+      preset: <span class="token-str">'ember'</span>,
+      captureMode: <span class="token-str">'viewport'</span>,
+    });
+  }, []);
+
+  <span class="token-kw">const</span> toggleTheme = (e?: React.MouseEvent) => {
+    <span class="token-kw">if</span> (e) {
+      inkRef.current?.<span class="token-fn">toggle</span>({ x: e.clientX, y: e.clientY });
+    } <span class="token-kw">else</span> {
+      inkRef.current?.<span class="token-fn">toggle</span>();
+    }
+  };
+
+  <span class="token-kw">return</span> { toggleTheme, ink: inkRef.current };
+}</code></pre>
+
+        <!-- Vue -->
+        <pre class="snippet-code is-hidden" data-code="vue"><code><span class="token-kw">&lt;script setup lang="ts"&gt;</span>
+<span class="token-kw">import</span> { onMounted, ref } <span class="token-kw">from</span> <span class="token-str">'vue'</span>;
+<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+
+<span class="token-kw">const</span> ink = ref&lt;InkTransition | <span class="token-kw">null</span>&gt;(<span class="token-kw">null</span>);
+
+onMounted(() => {
+  ink.value = <span class="token-fn">createInkTransition</span>({
+    toggleButton: document.<span class="token-fn">querySelector</span>(<span class="token-str">'#theme-toggle'</span>),
+    preset: <span class="token-str">'watercolor'</span>,
+  });
+});
+
+<span class="token-kw">function</span> <span class="token-fn">onToggle</span>(e: MouseEvent) {
+  ink.value?.<span class="token-fn">toggle</span>({ x: e.clientX, y: e.clientY });
+}
+<span class="token-kw">&lt;/script&gt;</span></code></pre>
+
+        <!-- Vanilla HTML -->
+        <pre class="snippet-code is-hidden" data-code="html"><code><span class="token-cmt">&lt;!-- Add theme button in your markup --&gt;</span>
+&lt;<span class="token-fn">button</span> <span class="token-str">id</span>=<span class="token-str">"theme-toggle"</span> <span class="token-str">type</span>=<span class="token-str">"button"</span>&gt;Toggle Theme&lt;/<span class="token-fn">button</span>&gt;
+
+<span class="token-cmt">&lt;!-- Initialize from standard ES script --&gt;</span>
+&lt;<span class="token-fn">script</span> <span class="token-str">type</span>=<span class="token-str">"module"</span>&gt;
+  <span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'https://esm.sh/theme.changer'</span>;
+  <span class="token-fn">createInkTransition</span>({ toggleButton: document.<span class="token-fn">querySelector</span>(<span class="token-str">'#theme-toggle'</span>) });
+&lt;/<span class="token-fn">script</span>&gt;</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical API Reference -->
+  <section class="section container" id="api" aria-labelledby="api-title">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title" id="api-title">API Reference</h2>
+        <p class="section-desc">Methods and configuration options exposed by the engine.</p>
+      </div>
+      <span class="section-meta">TypeScript Definitions</span>
+    </div>
+
+    <div class="api-table-wrapper">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Property / Method</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>createInkTransition(opts?)</code></td>
+            <td><code>(options?: Options) =&gt; InkTransition</code></td>
+            <td><code>-</code></td>
+            <td>Initializes and mounts the WebGL canvas and context listeners.</td>
+          </tr>
+          <tr>
+            <td><code>ink.toggle(point?, seed?)</code></td>
+            <td><code>(point?: Point, seed?: Seed) =&gt; void</code></td>
+            <td><code>toggleCenter()</code></td>
+            <td>Triggers the radial expansion from the specified viewport CSS coordinate.</td>
+          </tr>
+          <tr>
+            <td><code>ink.setPreset(name)</code></td>
+            <td><code>(name: PresetName) =&gt; void</code></td>
+            <td><code>'ink'</code></td>
+            <td>Switches live shader parameters (duration, tendril, noiseScale, softness, drift).</td>
+          </tr>
+          <tr>
+            <td><code>ink.setCaptureMode(mode)</code></td>
+            <td><code>(mode: 'viewport' | 'full') =&gt; void</code></td>
+            <td><code>'viewport'</code></td>
+            <td>Configures snapshotting strategy: viewport (~30ms) or full document.</td>
+          </tr>
+          <tr>
+            <td><code>ink.replay()</code></td>
+            <td><code>() =&gt; boolean</code></td>
+            <td><code>-</code></td>
+            <td>Re-runs the previous click using the identical seed and origin coordinates.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </main>
 
-<footer class="site-footer" id="contact">
+<footer class="site-footer">
   <div class="container footer">
-    <p class="footer__cta">Have something worth making quieter? <a class="text-link" href="mailto:hello@yourname.studio">Let’s talk.</a></p>
-    <div class="footer__row">
-      <span>© 2026 Codemure</span>
-      <ul class="footer__social" role="list">
-        <li><a href="#">Read.cv</a></li>
-        <li><a href="#">Dribbble</a></li>
-        <li><a href="#">LinkedIn</a></li>
-        <li><a href="#">GitHub</a></li>
+    <div class="footer__primary">
+      <div class="footer__brand">
+        <span class="wordmark__dot" aria-hidden="true"></span>
+        <span class="footer__name">theme.changer</span>
+      </div>
+      <p class="footer__lead">
+        Open-source WebGL2 theme transition engine. Designed and engineered by
+        <a class="text-link" href="https://www.pramuditha.is-a.dev/" target="_blank" rel="noopener noreferrer">Pramuditha Nadun</a>.
+      </p>
+    </div>
+
+    <div class="footer__secondary">
+      <ul class="footer__links" role="list">
+        <li><a href="https://www.pramuditha.is-a.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a></li>
+        <li><a href="https://github.com/PramudithaN" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        <li><a href="https://www.buymeacoffee.com/PramudithaN" target="_blank" rel="noopener noreferrer">Buy Me A Coffee</a></li>
+        <li><a href="mailto:pramudithanadun@gmail.com">Contact</a></li>
       </ul>
-      <span class="footer__local">Lisbon · <span id="local-time">--:--</span></span>
+      <span class="footer__copy">© 2026 theme.changer / Colombo, LK (<span id="local-time">--:--</span>)</span>
     </div>
   </div>
 </footer>

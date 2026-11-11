@@ -2,7 +2,7 @@ import type { Snapshot } from '../capture/capture';
 import type { Theme } from '../ui/theme';
 import { createProgram, type Program } from './program';
 import { createNoiseTexture } from './noiseTexture';
-import { inkParams, RIM_COLOR } from './params';
+import { inkParams, getRimColor } from './params';
 import { FULLSCREEN_VERT, INK_FRAG } from './shaders';
 
 interface ThemeTexture {
@@ -11,6 +11,10 @@ interface ThemeTexture {
   height: number;
   scale: number;
   key: string;
+  isViewport: boolean;
+  scrollX: number;
+  scrollY: number;
+  captureMs: number;
 }
 
 /** Offscreen copy of what the overlay showed when a transition was interrupted. */
@@ -108,14 +112,12 @@ export class InkRenderer {
     if (!vao) throw new Error('createVertexArray failed');
     this.vao = vao;
     this.noise = createNoiseTexture(gl);
-    this.composites = [];
-    this.activeComposite = -1;
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   }
 
-  /** Context loss/restore hooks. `onRestored` should re-upload snapshots. */
+  /**
+   * Registers context-loss listeners. The caller should drop any pending animation, then
+   * re-upload fresh snapshots once restored.
+   */
   watchContext(onLost: () => void, onRestored: () => void): void {
     this.canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
@@ -136,6 +138,14 @@ export class InkRenderer {
     return this.lost;
   }
 
+  getLastCaptureMs(): number {
+    let max = 0;
+    for (const t of this.textures.values()) {
+      if (t.captureMs > max) max = t.captureMs;
+    }
+    return max;
+  }
+
   /** Sizes the backing store to the overlay's CSS box at the given DPR. */
   resize(scale: number): void {
     const rect = this.canvas.getBoundingClientRect();
@@ -151,7 +161,17 @@ export class InkRenderer {
     const gl = this.gl;
     let entry = this.textures.get(snapshot.theme);
     if (!entry) {
-      entry = { texture: this.createTexture(), width: 0, height: 0, scale: 0, key: '' };
+      entry = {
+        texture: this.createTexture(),
+        width: 0,
+        height: 0,
+        scale: 0,
+        key: '',
+        isViewport: false,
+        scrollX: 0,
+        scrollY: 0,
+        captureMs: 0,
+      };
       this.textures.set(snapshot.theme, entry);
     }
     gl.bindTexture(gl.TEXTURE_2D, entry.texture);
@@ -160,6 +180,10 @@ export class InkRenderer {
     entry.height = snapshot.canvas.height;
     entry.scale = snapshot.scale;
     entry.key = snapshot.key;
+    entry.isViewport = snapshot.isViewport;
+    entry.scrollX = snapshot.scrollX;
+    entry.scrollY = snapshot.scrollY;
+    entry.captureMs = snapshot.ms;
   }
 
   /** True when a snapshot for `theme` exists and matches the current layout. */
@@ -191,8 +215,6 @@ export class InkRenderer {
     if (this.lost) return;
     this.render(frame);
   }
-
-  // ---------- internals ----------
 
   private createTexture(): WebGLTexture {
     const gl = this.gl;
@@ -245,13 +267,17 @@ export class InkRenderer {
     }
     const t = this.textures.get(source);
     if (!t) return null;
+
+    const scrollDiffX = t.isViewport ? window.scrollX - t.scrollX : window.scrollX;
+    const scrollDiffY = t.isViewport ? window.scrollY - t.scrollY : window.scrollY;
+
     return {
       texture: t.texture,
       width: t.width,
       height: t.height,
       ratio: t.scale / this.canvasScale,
-      offsetX: Math.floor(window.scrollX * t.scale + 0.5),
-      offsetY: Math.floor(window.scrollY * t.scale + 0.5),
+      offsetX: Math.floor(scrollDiffX * t.scale + 0.5),
+      offsetY: Math.floor(scrollDiffY * t.scale + 0.5),
       flipY: false,
     };
   }
@@ -263,6 +289,7 @@ export class InkRenderer {
 
     const gl = this.gl;
     const { program, uniform } = this.program;
+
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.useProgram(program);
     gl.bindVertexArray(this.vao);
@@ -297,7 +324,7 @@ export class InkRenderer {
     gl.uniform1f(uniform('uNoiseScale'), inkParams.noiseScale);
     gl.uniform1f(uniform('uSoftness'), inkParams.softness);
     gl.uniform1f(uniform('uDrift'), inkParams.drift);
-    gl.uniform3fv(uniform('uRimColor'), RIM_COLOR[frame.to]);
+    gl.uniform3fv(uniform('uRimColor'), getRimColor(frame.to, inkParams.preset));
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     return true;

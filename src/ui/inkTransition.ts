@@ -1,6 +1,6 @@
 import gsap from 'gsap';
 import { capturePage, layoutKey, renderScale } from '../capture/capture';
-import { inkParams } from '../gl/params';
+import { applyPreset, inkParams, type CaptureMode, type PresetName } from '../gl/params';
 import { InkRenderer, type InkFrame, type InkSource } from '../gl/renderer';
 import { applyTheme, getTheme, otherTheme, type Theme } from './theme';
 import { ThemeIcon } from './themeIcon';
@@ -43,7 +43,7 @@ type ActiveFrame = Omit<InkFrame, 'progress' | 'radius' | 'time' | 'cleanup'>;
  *  2. on toggle, covers the page with the "from" image, flips the live DOM underneath,
  *     spreads the ink, then fades the overlay away onto the already-flipped page
  *  3. if toggled mid-spread, freezes the frame on screen and spreads the next ink over it
- *  4. falls back to a CSS colour cross-fade without WebGL2 or with reduced motion
+ *  4. falls back to a CSS colour cross-fade or View Transitions API without WebGL2 or with reduced motion
  */
 export class InkTransition {
   private readonly renderer: InkRenderer | null;
@@ -104,6 +104,27 @@ export class InkTransition {
   /** The most recent click, for "replay last click". */
   get lastClick(): ClickRecord | null {
     return this.last;
+  }
+
+  get activePreset(): PresetName {
+    return inkParams.preset;
+  }
+
+  get captureMode(): CaptureMode {
+    return inkParams.captureMode;
+  }
+
+  setPreset(name: PresetName): void {
+    applyPreset(name);
+  }
+
+  setCaptureMode(mode: CaptureMode): void {
+    inkParams.captureMode = mode;
+    this.scheduleCapture(0);
+  }
+
+  getLastCaptureDuration(): number {
+    return this.renderer?.getLastCaptureMs() ?? 0;
   }
 
   /**
@@ -251,10 +272,22 @@ export class InkTransition {
     this.hide();
   }
 
-  /** Plain CSS colour transition (no WebGL2, reduced motion, or snapshots not ready yet). */
+  /** Plain CSS colour transition with native View Transitions API enhancement where supported. */
   private crossFade(to: Theme): void {
-    const root = document.documentElement;
     const motion = !reducedMotion.matches;
+
+    // Use native View Transitions API if supported and motion is allowed
+    const docWithVT = document as unknown as { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+    if (motion && typeof docWithVT.startViewTransition === 'function') {
+      docWithVT.startViewTransition(() => {
+        applyTheme(to, this.toggleButton);
+        this.icon?.set(to);
+      });
+      if (this.captureQueued) this.scheduleCapture(0);
+      return;
+    }
+
+    const root = document.documentElement;
     root.classList.add('theme-fade');
     root.style.setProperty('--theme-fade', `${CSS_FADE_S}s`);
     applyTheme(to, this.toggleButton);
@@ -290,7 +323,7 @@ export class InkTransition {
 
   // ---------- Capture scheduling ----------
 
-  private scheduleCapture(delay: number): void {
+  public scheduleCapture(delay: number = 0): void {
     window.clearTimeout(this.resizeTimer);
     this.resizeTimer = window.setTimeout(() => void this.captureAll(), delay);
   }
@@ -327,7 +360,7 @@ export class InkTransition {
         renderer.upload(snap);
         if (import.meta.env.DEV) {
           console.debug(
-            `[ink] captured ${theme} ${snap.canvas.width}×${snap.canvas.height} in ${snap.ms.toFixed(0)}ms`,
+            `[ink] captured ${theme} (${snap.isViewport ? 'viewport' : 'full'}) ${snap.canvas.width}×${snap.canvas.height} in ${snap.ms.toFixed(0)}ms`,
           );
         }
       }

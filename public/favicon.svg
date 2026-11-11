@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0b0b0f"/><path d="M16 7c4.5 4.6 7 8.4 7 11.6A7 7 0 0 1 9 18.6C9 15.4 11.5 11.6 16 7z" fill="#f6f4ef"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="theme-split" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0e"/>
+      <stop offset="50%" stop-color="#161622"/>
+      <stop offset="100%" stop-color="#2a2838"/>
+    </linearGradient>
+    <radialGradient id="amber-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7f50"/>
+      <stop offset="80%" stop-color="#e04f26"/>
+      <stop offset="100%" stop-color="#b83815"/>
+    </radialGradient>
+    <linearGradient id="light-crescent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0edf6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Container badge -->
+  <rect width="32" height="32" rx="8" fill="url(#theme-split)"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+
+  <!-- Fluid Light Moon / Wave half -->
+  <path d="M 16 4 C 22.627 4 28 9.373 28 16 C 28 22.627 22.627 28 16 28 C 16 22 20 19 20 16 C 20 13 16 10 16 4 Z" fill="url(#light-crescent)"/>
+
+  <!-- Fluid Amber Ink Core -->
+  <path d="M 16 8 C 19 11.5 21 14 21 16.5 C 21 19.5 18.8 21.5 16 21.5 C 13.2 21.5 11 19.5 11 16.5 C 11 14 13 11.5 16 8 Z" fill="url(#amber-glow)"/>
+  <circle cx="16" cy="16.5" r="2" fill="#ffffff" opacity="0.9"/>
+</svg>

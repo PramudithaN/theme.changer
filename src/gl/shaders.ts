@@ -1,6 +1,6 @@
 import { NOISE_CELLS } from './noiseTexture';
 
-/** Fullscreen triangle generated from gl_VertexID — no buffers needed. */
+/** Fullscreen triangle generated from gl_VertexID: no buffers needed. */
 export const FULLSCREEN_VERT = /* glsl */ `#version 300 es
 void main() {
   vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
