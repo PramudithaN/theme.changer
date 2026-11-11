@@ -40,6 +40,13 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'docs',
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'assets/[name]_[hash].js',
+          entryFileNames: 'assets/[name]_[hash].js',
+          assetFileNames: 'assets/[name]_[hash].[ext]',
+        },
+      },
     },
   };
 });
