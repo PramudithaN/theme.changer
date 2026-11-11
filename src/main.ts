@@ -146,10 +146,10 @@ snippetTabs.forEach((tab) => {
 
 // Package manager command switcher
 const PKG_COMMANDS: Record<string, string> = {
-  npm: 'npm install theme.changer gsap html2canvas',
-  pnpm: 'pnpm add theme.changer gsap html2canvas',
-  yarn: 'yarn add theme.changer gsap html2canvas',
-  bun: 'bun add theme.changer gsap html2canvas',
+  npm: 'npm install @pramuditha/theme.changer gsap html2canvas',
+  pnpm: 'pnpm add @pramuditha/theme.changer gsap html2canvas',
+  yarn: 'yarn add @pramuditha/theme.changer gsap html2canvas',
+  bun: 'bun add @pramuditha/theme.changer gsap html2canvas',
 };
 
 const pkgTabs = document.querySelectorAll<HTMLButtonElement>('.cli-tab');
@@ -188,10 +188,10 @@ function setupCopy(btn: HTMLElement | null, textGetter: () => string) {
   });
 }
 
-setupCopy(pkgCopyBtn, () => pkgCmdDisplay?.textContent || 'npm install theme.changer gsap html2canvas');
+setupCopy(pkgCopyBtn, () => pkgCmdDisplay?.textContent || 'npm install @pramuditha/theme.changer gsap html2canvas');
 
 const heroCliBtn = document.querySelector<HTMLButtonElement>('.cli-pill .cli-btn');
-setupCopy(heroCliBtn, () => 'npm i theme.changer');
+setupCopy(heroCliBtn, () => 'npm i @pramuditha/theme.changer');
 
 // Keyboard shortcuts: 't' for toggle, 'd' for panel inspector, 'r' for replay
 const TEXT_ENTRY =

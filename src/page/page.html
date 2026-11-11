@@ -78,9 +78,9 @@
         Inspector Controls (D)
       </button>
 
-      <div class="cli-pill" data-copy="npm i theme.changer">
+      <div class="cli-pill" data-copy="npm i @pramuditha/theme.changer">
         <span class="cli-prompt">$</span>
-        <code class="cli-text">npm i theme.changer</code>
+        <code class="cli-text">npm i @pramuditha/theme.changer</code>
         <button class="cli-btn" type="button" aria-label="Copy install command" title="Copy command">
           <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
           <span class="copy-feedback">Copy</span>
@@ -209,7 +209,7 @@
         <button class="cli-copy-btn" id="pkg-copy-btn" type="button">Copy</button>
       </div>
       <div class="cli-panel__body">
-        <code id="pkg-cmd-display">npm install theme.changer gsap html2canvas</code>
+        <code id="pkg-cmd-display">npm install @pramuditha/theme.changer gsap html2canvas</code>
       </div>
     </div>
 
@@ -226,7 +226,7 @@
 
       <div class="snippet-body">
         <!-- TypeScript -->
-        <pre class="snippet-code" data-code="ts"><code><span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+        <pre class="snippet-code" data-code="ts"><code><span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'@pramuditha/theme.changer'</span>;
 
 <span class="token-cmt">// Mount the WebGL2 transition engine on your toggle element</span>
 <span class="token-kw">const</span> ink = <span class="token-fn">createInkTransition</span>({
@@ -244,7 +244,7 @@ button.<span class="token-fn">addEventListener</span>(<span class="token-str">'c
 
         <!-- React / Next.js -->
         <pre class="snippet-code is-hidden" data-code="react"><code><span class="token-kw">import</span> { useEffect, useRef } <span class="token-kw">from</span> <span class="token-str">'react'</span>;
-<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'@pramuditha/theme.changer'</span>;
 
 <span class="token-kw">export function</span> <span class="token-fn">useThemeChanger</span>() {
   <span class="token-kw">const</span> inkRef = useRef&lt;InkTransition | <span class="token-kw">null</span>&gt;(<span class="token-kw">null</span>);
@@ -272,7 +272,7 @@ button.<span class="token-fn">addEventListener</span>(<span class="token-str">'c
         <!-- Vue -->
         <pre class="snippet-code is-hidden" data-code="vue"><code><span class="token-kw">&lt;script setup lang="ts"&gt;</span>
 <span class="token-kw">import</span> { onMounted, ref } <span class="token-kw">from</span> <span class="token-str">'vue'</span>;
-<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'theme.changer'</span>;
+<span class="token-kw">import</span> { createInkTransition, <span class="token-kw">type</span> InkTransition } <span class="token-kw">from</span> <span class="token-str">'@pramuditha/theme.changer'</span>;
 
 <span class="token-kw">const</span> ink = ref&lt;InkTransition | <span class="token-kw">null</span>&gt;(<span class="token-kw">null</span>);
 
@@ -294,7 +294,7 @@ onMounted(() => {
 
 <span class="token-cmt">&lt;!-- Initialize from standard ES script --&gt;</span>
 &lt;<span class="token-fn">script</span> <span class="token-str">type</span>=<span class="token-str">"module"</span>&gt;
-  <span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'https://esm.sh/theme.changer'</span>;
+  <span class="token-kw">import</span> { createInkTransition } <span class="token-kw">from</span> <span class="token-str">'https://esm.sh/@pramuditha/theme.changer'</span>;
   <span class="token-fn">createInkTransition</span>({ toggleButton: document.<span class="token-fn">querySelector</span>(<span class="token-str">'#theme-toggle'</span>) });
 &lt;/<span class="token-fn">script</span>&gt;</code></pre>
       </div>
@@ -326,13 +326,25 @@ onMounted(() => {
             <td><code>createInkTransition(opts?)</code></td>
             <td><code>(options?: Options) =&gt; InkTransition</code></td>
             <td><code>-</code></td>
-            <td>Initializes and mounts the WebGL canvas and context listeners.</td>
+            <td>Initializes and mounts WebGL2 engine with fallback. Options: <code>toggleButton</code>, <code>webgl</code>, <code>preset</code>, <code>captureMode</code>, <code>captureOnToggle</code>, <code>onToggle</code>.</td>
           </tr>
           <tr>
             <td><code>ink.toggle(point?, seed?)</code></td>
             <td><code>(point?: Point, seed?: Seed) =&gt; void</code></td>
             <td><code>toggleCenter()</code></td>
-            <td>Triggers the radial expansion from the specified viewport CSS coordinate.</td>
+            <td>Triggers organic radial expansion from viewport coordinates. Locked while transitioning to prevent conflicting animations.</td>
+          </tr>
+          <tr>
+            <td><code>ink.isAnimating</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>True while the transition wave or fade-out overlay is actively animating.</td>
+          </tr>
+          <tr>
+            <td><code>ink.activePreset</code></td>
+            <td><code>PresetName</code></td>
+            <td><code>'ink'</code></td>
+            <td>Returns the active shader preset (<code>'ink' | 'watercolor' | 'smoke' | 'ember' | 'ripple'</code>).</td>
           </tr>
           <tr>
             <td><code>ink.setPreset(name)</code></td>
@@ -344,13 +356,13 @@ onMounted(() => {
             <td><code>ink.setCaptureMode(mode)</code></td>
             <td><code>(mode: 'viewport' | 'full') =&gt; void</code></td>
             <td><code>'viewport'</code></td>
-            <td>Configures snapshotting strategy: viewport (~30ms) or full document.</td>
+            <td>Configures snapshot strategy: fast viewport mode (~30ms) or full document.</td>
           </tr>
           <tr>
             <td><code>ink.replay()</code></td>
             <td><code>() =&gt; boolean</code></td>
             <td><code>-</code></td>
-            <td>Re-runs the previous click using the identical seed and origin coordinates.</td>
+            <td>Re-runs the previous click using identical seed, preset, and origin coordinates.</td>
           </tr>
         </tbody>
       </table>
